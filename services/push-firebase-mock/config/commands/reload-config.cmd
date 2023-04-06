@@ -1,0 +1,1 @@
+./../../../configs/commands/reload-config.cmd

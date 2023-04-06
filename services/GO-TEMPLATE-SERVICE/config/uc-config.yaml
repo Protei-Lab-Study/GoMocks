@@ -1,0 +1,43 @@
+version: 0.0.0.1
+description: Конфигурация для сервиса GO-TEMPLATE-SERVICE
+endpoints: # Транспортные точки подключения для различных микросервисов
+  GO-TEMPLATE-SERVICE-endpoint:
+    listen-addr: 0.0.0.0
+    port: 8399
+  external-service-endpoint:
+    service-access-url: 127.0.0.1
+    port: 8309
+influx-settings: # Настройка influx
+  enabled: false
+  url: "http://127.0.0.1:8086"
+  flush-interval: 1s # таймаут по которому будет происходить запись накопленных данных
+  credentials: # Настройки доступа к influx
+    username:
+    password:
+  database: uc_metrics # База данных в influx, в которую будет происходить запись
+  bucket-size: 5000 # Размер буфера для накопления
+  default-tag: # Тэг по умолчанию, которым будут помечены все записи
+    key: host
+    value: uc-office
+  write-metrics-timeout: 5s # частота записи метрик
+  metrics:
+    - go-runtime # Используется для хранения информации о показателях go-runtime сервисов
+broker:
+  amqp: # параметры подключения к брокеру AMQP для посылки нотификаций о статусе вызовов
+    primary:
+      url: amqp://127.0.0.1:5672
+GO-TEMPLATE-SERVICE:
+  default:
+    server-endpoint: GO-TEMPLATE-SERVICE-endpoint
+    test-only-external-service-endpoint: external-service-endpoint
+    amqp-broker: primary
+    key1: config-value-1
+    key2: false
+    key3: 12345
+    actor-services:
+      AmqpClientName:
+        worker-count: 4
+        service-id: 1
+      TEST_SERVICE_NAME:
+        worker-count: 2
+        other-setting: test

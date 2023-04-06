@@ -1,0 +1,26 @@
+log-max-size: 100            # Максимальный размер лог файла в МБ (по умолчанию 100МБ)
+log-compress: true           # Сжимать логи в .gz
+log-max-files: 3             # Максимальное количество старых файлов с логами
+log-rules:
+  -
+    output: tty # tty || имя файла
+    enabled: true
+    colorize: true
+    level: info
+    mask: "config"
+  -
+    output: tty # tty || имя файла
+    enabled: true
+    colorize: true
+    level: debug
+    mask: "*"
+  -
+    output: ./logs/ffsm.log
+    enabled: true
+    level: debug
+    mask: "FFSM-LOG-TAG|protei_rfsm_light"
+  -
+    output: ./logs/error.log
+    enabled: true
+    level: warning
+    mask: "*"

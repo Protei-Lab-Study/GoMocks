@@ -1,0 +1,1 @@
+./../../../configs/commands/dialog-info.cmd

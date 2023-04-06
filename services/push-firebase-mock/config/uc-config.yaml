@@ -1,0 +1,15 @@
+version: 0.0.0.1
+description: Конфигурация для сервиса push-firebase-mock
+endpoints: # Транспортные точки подключения для различных микросервисов
+  push-firebase-mock-endpoint:
+    listen-addr: 0.0.0.0
+    service-access-url: 127.0.0.1
+    port: 8319
+push-firebase-mock:
+  default:
+    server-endpoint: push-firebase-mock-endpoint
+    tls-cert-path: './cert/firebaseMockCert.crt'
+    tls-key-path: './cert/firebaseMockCert.key'
+    actor-services:
+      WebSocketSessionName:
+        worker-count: 4

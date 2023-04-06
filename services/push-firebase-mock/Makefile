@@ -1,0 +1,3 @@
+#!make
+
+include ./../MakefileBase.mk

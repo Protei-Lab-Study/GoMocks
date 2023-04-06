@@ -1,0 +1,68 @@
+.Линтер protei-uc-push-firebase-mock:
+  script:
+    - PATH_SERVICE="services/push-firebase-mock/src"
+    - cd $PATH_SERVICE
+    - reviewdog -conf $WORK_PATH/core/.reviewdog.yml -runners=golangci-lint -reporter=gitlab-mr-discussion --diff="git diff develop"
+    - cd ../../../
+
+Сборка и Unit тесты protei-uc-push-firebase-mock:
+  stage: Unit тесты + Сборка пакетов
+  rules:
+    - if: $CLEAR_ARTIFACTS
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - when: on_success
+  needs:
+    - Подготовка окружения
+  variables:
+    SERVICE_NAME: "protei-uc-push-firebase-mock"
+    PATH_SERVICE: "services/push-firebase-mock"
+  script:
+    - mkdir -p $CI_PROJECT_DIR/package_deb_tested
+    - mkdir -p $CI_PROJECT_DIR/package_rpm_tested
+    - mkdir -p $CI_PROJECT_DIR/package_deb_night
+    - mkdir -p $CI_PROJECT_DIR/package_rpm_night
+    - echo "[url \"https://oauth2:$GIT_TOKEN@git.protei.ru/protei-golang/common\"]
+      insteadOf = https://git.protei.ru/protei-golang/common" > /root/.gitconfig
+    - cd $WORK_PATH/core/$PATH_SERVICE
+    - GOMAXPROCS=1 make compile
+    - cd $PACKAGE_PATH
+    - source venv/bin/activate
+    - cd $SERVICE_NAME
+    - |-
+      if [[ $SHA_COMMIT_RELEASE != "" ]]; 
+        then
+          echo "Cборка пакетов для release"
+          protei-package-builder -t release -m "Gitlab CI Build" -a "Minor D.S" --dst-dir ./
+          PACKAGE_NAME_RELEASE_DEB=`find . -regextype posix-egrep -regex ".*($SERVICE_NAME_[0-9a-z.-]+release_amd64.deb)"`
+          echo $PACKAGE_NAME_RELEASE_DEB
+          PACKAGE_NAME_RELEASE_RPM=`find . -regextype posix-egrep -regex ".*($SERVICE_NAME-[0-9a-z.-]+release.x86_64.rpm)"`
+          echo $PACKAGE_NAME_RELEASE_RPM
+          cp $PACKAGE_NAME_RELEASE_DEB /home/support/gitlab-ci/$CI_PIPELINE_ID
+          cp $PACKAGE_NAME_RELEASE_RPM /home/support/gitlab-ci/$CI_PIPELINE_ID
+        else
+          protei-package-builder -t night -m "Gitlab CI Build" -a "Minor D.S" --dst-dir ./
+          protei-package-builder -t tested -m "Gitlab CI Build" -a "Minor D.S" --dst-dir ./
+          PACKAGE_NAME_NIGHT_DEB=`find . -regextype posix-egrep -regex ".*($SERVICE_NAME_[0-9a-z.-]+night_amd64.deb)"`
+          echo $PACKAGE_NAME_NIGHT_DEB
+          PACKAGE_NAME_NIGHT_RPM=`find . -regextype posix-egrep -regex ".*($SERVICE_NAME-[0-9a-z.-]+night.x86_64.rpm)"`
+          echo $PACKAGE_NAME_NIGHT_RPM
+          PACKAGE_NAME_TESTED_DEB=`find . -regextype posix-egrep -regex ".*($SERVICE_NAME_[0-9a-z.-]+tested_amd64.deb)"`
+          echo $PACKAGE_NAME_TESTED_DEB
+          PACKAGE_NAME_TESTED_RPM=`find . -regextype posix-egrep -regex ".*($SERVICE_NAME-[0-9a-z.-]+tested.x86_64.rpm)"`
+          echo $PACKAGE_NAME_TESTED_RPM
+          cp $PACKAGE_NAME_NIGHT_DEB $CI_PROJECT_DIR/package_deb_night
+          cp $PACKAGE_NAME_NIGHT_RPM $CI_PROJECT_DIR/package_rpm_night
+          cp $PACKAGE_NAME_TESTED_DEB $CI_PROJECT_DIR/package_deb_tested
+          cp $PACKAGE_NAME_TESTED_RPM $CI_PROJECT_DIR/package_rpm_tested
+          cp $PACKAGE_NAME_TESTED_DEB /home/support/gitlab-ci/$CI_PIPELINE_ID
+          cp $PACKAGE_NAME_TESTED_RPM /home/support/gitlab-ci/$CI_PIPELINE_ID
+          if [[ $CI_COMMIT_BRANCH = "develop" ]]; then
+            cd $CI_PROJECT_DIR/package_deb_night
+            upload_packages_to_soup
+            cd $CI_PROJECT_DIR/package_rpm_night
+            upload_packages_to_soup
+          fi
+      fi
+    - deactivate

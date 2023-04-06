@@ -1,0 +1,4 @@
+*.png filter=lfs diff=lfs merge=lfs -binary
+*.apk filter=lfs diff=lfs merge=lfs -binary
+*.docx filter=lfs diff=lfs merge=lfs -binary
+*.pdf filter=lfs diff=lfs merge=lfs -binary
